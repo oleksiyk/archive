@@ -1,0 +1,25 @@
+Fri Jun 25 13:08:33 2004 v0.0.4a
+    - 'value is not assigned to node on last line without newline' bug fixed
+
+Sat Apr 10 16:14:18 2004 v0.0.4
+    - segfault in getFirstNode() with empty config file fixed (thanks to Michael MacKenzie)
+    - escaping of '#' and ';' chars
+    
+Fri May 16 11:27:04 2003 v0.0.3a
+    - documentation update
+    
+Wed May 14 14:27:33 2003 v0.0.3
+    - new examples
+    - problem with macro substitution if macro was in the middle of the value was fixed
+
+Mon Mar 17 17:26:15 2003 v0.0.2
+    - code cleanup
+    - now using mempool to be less memory aggressive and more fast
+    - support for multiline values ( see src/example/conf.conf )
+    - supports \" \' \n \r characters
+
+Mon Mar 15 10:26:15 2003 v0.0.1
+    - first bugfull release =)
+    
+
+Aleksey Krivoshey a.krivoshey@kharkiv.com.ua

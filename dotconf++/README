@@ -1,0 +1,194 @@
+*DOTCONF++ library*
+
+library for parsing configuration files
+
+by Aleksey Krivoshey voodoo@foss.kharkov.ua <mailto:voodoo@foss.kharkov.ua>
+
+
+   1. Introduction
+          * Licensing 
+   2. Features
+   3. Using library
+          * Opening configuration file
+          * Error handling
+          * Retrieving parameters and values
+   4. Download
+
+
+   1. Introduction
+
+      dotconf++ is a dotconf (http://www.azzit.de/dotconf/) like
+      configuration file parser written in C++. It supports macro
+      substitution from the environment or from the file itself, config
+      file inclusion, easy handling of XML like tags, checking for
+      required tags, and more. The whole document (with all inclusions)
+      is parsed into a useful tree structure that is easy to use in your
+      program
+
+         1. Licensing.
+            Library is licensed under *GNU Lesser ( Library ) General
+            Public License (LGPL)
+            *
+   2. Features
+         1. Comments:
+            # some comment
+            ; some comment
+         2. Multivalue parameters
+            ParameterName value1 value2 value3 ?value4 with spaces?
+            ParameterName1 = value11 value12 value13
+         3. Multiline parameters
+            MultilineText id1 "Quick brown \
+               fox jumps...\
+               bla bla bla"
+
+            CustomLog /usr/local/apache-ssl/logs/ssl_request_log \
+               "%t %h %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%r\" %b"
+         4. Macro substitution from environment or from config file,
+            with default values if substitution not found
+            LogFile ${TEMP_PATH:-"/tmp/default temp path"}
+
+            LogOptions ${PWD:-/tmp}/log_${USER}
+         5. Tags ( tags are normal parameters, but they become parent
+            for all parameters between opening and closing tag)
+            <SectionTag allOnOneLine> onLineParameter=onLineValue
+            </SectionTag>
+
+            <SectionTag tagValue tagValue2>
+               inTagParameter "disabled? # comment
+            </SectionTag>
+
+            #nested tags
+            <SectionTag tagValue>
+               TagEnable #parameter without value
+               <SubSection SubsectionName>
+                  subsectionParameterDisabled Yes;comment
+                  subsectionParameter2Disabled No
+               </SubSection>
+            </SectionTag>
+
+         6. Quotes and line-terminators inside values
+            Text = "this program is \"dot conf-like\"" "new line starts\nhere"
+         7. Config file inclusion ( with recursion checks )
+            DOTCONFPPIncludeFile ${PWD}/modules.conf
+         8. here are example configuration files:
+                * insmtpd.conf
+                * log.conf
+                * modules.conf
+                * ssl.conf
+
+   3. Using library
+         1. Opening configuration file
+                * Create configuration document object:
+
+                  DOTCONFDocument * conf = new DOTCONFDocument(DOTCONFDocument::CASEINSENSITIVE);
+                  or
+                  DOTCONFDocument * conf = new DOTCONFDocument(DOTCONFDocument::CASESENSITIVE);
+                * [OPTIONAL] Set required options
+
+                  const char * requiredOptions[] = {"Users", NULL};
+                  conf->setRequiredOptionNames(requiredOptions);
+
+                * give it configuration file:
+
+                  if(conf->setContent("example1.conf") == -1){
+                      return -1;
+                  }
+
+                  DOTCONFDocument::setContent() will return -1 on error.
+                  Error message will printed to stderr.
+                  See also error handling.
+		  
+         2. Error handling
+            You can inherit your class from DOTCONFDocument overriding
+            virtual function
+            virtual void error(int lineNum, const char * fileName, const char * fmt, ...); :
+
+            class MyConf : public DOTCONFDocument
+            {
+            private:
+                  virtual void error(int lineNum, const char *fileName, const char *fmt, ...);
+            public:
+                  MyConf(DOTCONFDocument::CaseSensitive _cs):DOTCONFDocument(_cs){};
+            };
+
+            Then you can log messages anywhere you want implementing
+            your own error function.
+            NOTE: If it is general error( not at configuration parsing ), then fileNum=0 and fileName=NULL.
+
+            void MyConf::error(int lineNum, const char * fileName, const char * fmt, ...)
+            {
+                va_list args;
+                va_start(args, fmt);
+               
+                size_t len = (lineNum!=0?strlen(fileName):0) + strlen(fmt) + 50;
+
+                char * buf = (char*)mempool->alloc(len);
+
+                if(lineNum)
+                    (void) snprintf(buf, len, "DOTCONF++: file '%s', line %d: %s", fileName, lineNum, fmt);
+                else
+                    (void) snprintf(buf, len, "DOTCONF++: %s", fmt);
+
+                buf[len-1] = 0;
+
+                log->vlog(LogMessageType::MESSAGE_ERROR, 0, 0, buf, args);
+
+                va_end(args);
+            }
+	    
+         3. Retrieving parameters and values
+               1. Find parameter by name in the global scope of configuration file:
+                  const DOTCONFDocumentNode * node =
+                  conf->findNode("Users");
+
+                  Users = voodoo boss kid
+		  
+               2. Find parameter by name in the parent parameter ( inside tag ):
+                  const DOTCONFDocumentNode * pnode = conf->findNode("Parent");
+                  const DOTCONFDocumentNode * node = conf->findNode("Users", pnode);
+
+                  <Parent>
+                      Users = voodoo boss kid
+                  </Parent>
+		  
+               3. Find parameter by name starting from some node ( usefull when there are many parameters with the same name):
+                  const DOTCONFDocumentNode * node = NULL;
+                  while((node = conf->findNode("Users", NULL, node)) != NULL){
+                        printf("Users value = '%s'\n", node->getValue());
+                  }
+
+                  Users = voodoo
+                  Users = kid
+                  Users = boss
+
+               4. Find sibling node
+                  const DOTCONFDocumentNode * nnode = node->getNextNode();
+                  and
+                  const DOTCONFDocumentNode * nnode = node->getPreviousNode();
+		  
+               5. Find parent or first child node
+                  const DOTCONFDocumentNode * pnode = node->getParentNode();
+                  and
+                  const DOTCONFDocumentNode * cnode = node->getChildNode();
+		  
+               6. Get all child nodes
+                  const DOTCONFDocumentNode * cnode = node->getChildNode();
+                  while(cnode){
+                      printf("childNode '%s', value='%s'\n", cnode->getName(), cnode->getValue());
+                      cnode = cnode->getNextNode();
+                  }
+		  
+               7. Get all parameter values
+                  int i = 0;
+                  const char * v = NULL;
+                  while((v = node->getValue(i++)) != NULL){
+                      printf("value='%s'\n", v);
+                  }
+		  
+               8. Get parameter location
+                  int lineNum = node->getConfigurationLineNumber();
+                  const char * fileName = node->getConfigurationFileName();
+         4. See also examples in the distribution
+   4. Download
+      Latest version is available from http://www.foss.kharkov.ua/~voodoo/ 
+

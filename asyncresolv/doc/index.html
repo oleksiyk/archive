@@ -1,0 +1,147 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=koi8-r">
+	<TITLE>AsyncResolv. asynchronous DNS query library</TITLE>
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 1.0.1  (Linux)">
+	<META NAME="CREATED" CONTENT="20030522;10085700">
+	<META NAME="CHANGED" CONTENT="20030522;11341600">
+</HEAD>
+<BODY LANG="ru-RU">
+<P><A HREF="http://sourceforge.net/"><IMG SRC="http://sourceforge.net/sflogo.php?group_id=81669&amp;type=5" NAME="Graphic1" ALT="SourceForge.net Logo" ALIGN=BOTTOM WIDTH=210 HEIGHT=62 BORDER=0></A>
+</P>
+<P ALIGN=CENTER><FONT SIZE=4><B>AsyncResolv library</B></FONT></P>
+<P ALIGN=CENTER><FONT SIZE=3>asynchronous DNS query library</FONT></P>
+<P ALIGN=CENTER>by Aleksey Krivoshey <A HREF="mailto:krivoshey@users.sourceforge.net">krivoshey@users.sourceforge.net</A></P>
+<P><BR><BR>
+</P>
+<OL>
+	<LI><P><A HREF="#intro">Introduction</A></P>
+	<OL>
+		<LI><P><A HREF="#lic">Licensing</A></P>
+		<LI><P><A HREF="#download">Download</A></P>
+	</OL>
+	<LI><P><A HREF="#using">Using library</A></P>
+	<OL>
+		<LI><P><A HREF="#initialization">initialization</A></P>
+		<LI><P><A HREF="#prepare">Prepare query</A></P>
+		<LI><P><A HREF="#resolve">Asynchronously resolve query and/or wait
+		for completion</A></P>
+		<LI><P STYLE="margin-bottom: 0cm"><A NAME="getreply1"></A><A HREF="#getreply">Get
+		reply</A></P>
+		<LI><P><A HREF="#getallquestions">Get all question fields from
+		reply</A></P>
+		<LI><P><A HREF="#getheaders">Get all headers from reply</A></P>
+		<LI><P STYLE="margin-bottom: 0cm"><A HREF="#getallanswers">Get all
+		answers (answer RR's)</A></P>
+		<LI><P STYLE="margin-bottom: 0cm"><A HREF="#getallauthoritative">Get
+		all authoritative answers</A></P>
+		<LI><P STYLE="margin-bottom: 0cm"><A HREF="#getalladditional">Additional
+		answers</A></P>
+		<LI><P STYLE="margin-bottom: 0cm"><A HREF="#printall">Print __all__
+		resource records</A></P>
+		<LI><P STYLE="margin-bottom: 0cm"><A HREF="#getallrrs">Get all RR's
+		of some type</A></P>
+		<LI><P STYLE="margin-bottom: 0cm"><A HREF="#cleanup">Cleanup before
+		next query</A></P>
+	</OL>
+</OL>
+<P><BR><BR>
+</P>
+<OL>
+	<LI><P><A NAME="intro"></A>Introduction.<BR>AsyncResolv is an
+	asynchronous DNS query library written in C++.<BR>Resolver is
+	capable of most RFC1035 resource records parsing, supports queries
+	over UDP and over TCP (if UDP failed)</P>
+	<OL>
+		<LI><P><A NAME="lic"></A>Library is licensed under <B>GNU Lesser (
+		Library ) General Public License (LGPL)</B></P>
+		<LI><P><A NAME="download"></A>Download<BR>Latest version is
+		available
+		from<BR><A HREF="http://sourceforge.net/projects/asyncresolv/">http://sourceforge.net/projects/asyncresolv/</A><BR><A HREF="http://www.foss.kharkov.ua/~voodoo/">http://www.foss.kharkov.ua/~voodoo/</A></P>
+	</OL>
+	<LI><P><A NAME="using"></A>Using library</P>
+	<OL>
+		<LI><P><A NAME="initialization"></A>Initialization</P>
+		<OL>
+			<LI><P>Create resolver object:<BR><BR><FONT COLOR="#0000ff">AsyncDNSResolver
+			* resolver = new AsyncDNSResolver();</FONT></P>
+			<LI><P>Initialize it<BR><BR><FONT COLOR="#0000ff">if(resolver-&gt;initialize()
+			== -1){<BR>&nbsp;&nbsp;return -1;<BR>}</FONT></P>
+		</OL>
+		<LI><P><A NAME="prepare"></A>Prepare query</P>
+		<OL>
+			<LI><P>set query type (recursive, status/normal/inverse
+			query)<BR><BR><FONT COLOR="#0000ff">if(resolver-&gt;prepareQuery(RFC1035_OPCODE_QUERY,
+			RFC1035_RESOLVE_RECURSIVE) == -1){<BR>&nbsp;&nbsp;return -1;<BR>}</FONT><BR><BR>Possible
+			values for opcode are:<BR>- RFC1035_OPCODE_QUERY<BR>-
+			RFC1035_OPCODE_IQUERY<BR>- RFC1035_OPCODE_STATUS<BR><BR>Possible
+			values for recursive behavior are:<BR>-
+			RFC1035_RESOLVE_RECURSIVE<BR>- 0</P>
+			<LI><P>set query ( query name, resource record type,
+			class)<BR><BR><FONT COLOR="#0000ff">if(resolver-&gt;addQuery(&quot;aol.com&quot;,
+			RFC1035_TYPE_MX, RFC1035_CLASS_IN) == -1){<BR>&nbsp;&nbsp;return -1;<BR>}</FONT></P>
+		</OL>
+		<LI><P><A NAME="resolve"></A>Asynchronously resolve query and/or
+		wait for completion</P>
+		<OL>
+			<LI><P>Using resolver-&gt;wait(msec)
+			function<BR><BR><FONT COLOR="#0000ff">while(resolver-&gt;resolveQueries()
+			== EAGAIN){<BR>&nbsp;&nbsp;if(resolver-&gt;wait(10000) !=
+			0){<BR>&nbsp;&nbsp;&nbsp;&nbsp;if(resolver-&gt;timedout() == -1){<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;<BR>&nbsp;&nbsp;&nbsp;&nbsp;}<BR>&nbsp;&nbsp;}<BR>}</FONT></P>
+			<LI><P>Using own poll() loop<BR><BR><FONT COLOR="#0000ff">while(resolver-&gt;resolveQueries()
+			== EAGAIN){<BR>&nbsp;&nbsp;int e = poll(resolver-&gt;getPollfd(), 1,
+			10000);<BR>&nbsp;&nbsp;&nbsp;&nbsp;if(e == -1){<BR>&nbsp;&nbsp;&nbsp;&nbsp;perror(&ldquo;poll()
+			failed&rdquo;);<BR>&nbsp;&nbsp;&nbsp;&nbsp;break;<BR>&nbsp;&nbsp;}<BR>&nbsp;&nbsp;if(e ==
+			0){<BR>&nbsp;&nbsp;&nbsp;&nbsp;if(resolver-&gt;timedout() == -1){<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;<BR>&nbsp;&nbsp;&nbsp;&nbsp;}<BR>&nbsp;&nbsp;}<BR>}</FONT></P>
+		</OL>
+		<LI><P><A NAME="getreply"></A>Get reply<BR><BR><FONT COLOR="#0000ff">const
+		AsyncDNSReply * reply = resolver-&gt;getReply();</FONT></P>
+		<LI><P><A NAME="getallquestions"></A>Get all question fields from
+		reply<BR><BR><FONT COLOR="#0000ff">const RFC1035_MessageQuestion *
+		question = reply-&gt;getQuestion();<BR>printf(&quot;Questions:\n&quot;);<BR>int
+		i = 0;<BR>while((question = reply-&gt;getQuestion(i++)) !=
+		NULL){<BR>&nbsp;&nbsp;printf(&quot;qname=%s, qtype=%d, qclass=%d,
+		header_id=%d\n&quot;, question-&gt;qname, question-&gt;qtype,
+		question-&gt;qclass, question-&gt;header_id);<BR>}</FONT></P>
+		<LI><P><A NAME="getheaders"></A>Get all headers from reply<BR><BR><FONT COLOR="#0000ff">const
+		RFC1035_MessageHeader * header = NULL;<BR>size_t i =
+		0;<BR>printf(&quot;Headers:\n&quot;);<BR>while((header =
+		reply-&gt;getHeader(i++)) != NULL){<BR>&nbsp;&nbsp;printf(&quot;ID=%d,
+		RCODE=%d, %s\n&quot;, header-&gt;id, header-&gt;get_rcode(),
+		header-&gt;get_aa()?&quot;Authoritative answer&quot;:&quot;Not
+		authoritative answer&quot;);<BR>}</FONT></P>
+		<LI><P><A NAME="getallanswers"></A>Get all answers (answer
+		RR's)<BR><BR><FONT COLOR="#0000ff">const RFC1035_RR * answer =
+		NULL;<BR>i = 0;<BR>while((answer = reply-&gt;getAnswer(i++)) !=
+		NULL){<BR>&nbsp;&nbsp;dump(answer);<BR>}</FONT><BR><BR><I>--- dump() function
+		is defined in example/test.cc ---</I></P>
+		<LI><P><A NAME="getallauthoritative"></A>Get all authoritative
+		answers<BR><BR><FONT COLOR="#0000ff">const RFC1035_RR * answer =
+		NULL;<BR>int i = 0;<BR>while((answer = reply-&gt;getAuthority(i++))
+		!= NULL){<BR>&nbsp;&nbsp;dump(answer);<BR>}</FONT><BR><I>--- dump() function is
+		defined in example/test.cc ---</I></P>
+		<LI><P><A NAME="getalladditional"></A>Additional answers<BR><BR><FONT COLOR="#0000ff">const
+		RFC1035_RR * answer = NULL;<BR>int i = 0;<BR>while((answer =
+		reply-&gt;getAdditional(i++)) != NULL){<BR>&nbsp;&nbsp;dump(answer);<BR>}</FONT><BR><I>---
+		dump() function is defined in example/test.cc ---</I></P>
+		<LI><P><A NAME="printall"></A>Print __all__ resource records<BR><BR><FONT COLOR="#0000ff">const
+		RFC1035_RR * answer = NULL;<BR>int i = 0;<BR>while((answer =
+		reply-&gt;getRR(i++)) != NULL){<BR>&nbsp;&nbsp;dump(answer);<BR>}</FONT></P>
+		<LI><P><A NAME="getallrrs"></A>Get all RR's of some type<BR>Resource
+		records of the same type are linked in the reverse unidirectional
+		list:<BR><BR><FONT COLOR="#0000ff">// All MX resource records<BR>const
+		RFC1035_RR * answer = NULL;<BR>answer =
+		reply-&gt;getLastRRByType(RFC1035_TYPE_MX);<BR>while(answer){<BR>&nbsp;&nbsp;dump(answer);<BR>&nbsp;&nbsp;answer
+		= answer-&gt;prevRR;<BR>}</FONT></P>
+		<LI><P><A NAME="cleanup"></A>Cleanup before next
+		query<BR><BR><FONT COLOR="#0000ff">resolver-&gt;cleanup(); //must
+		be called after each call to resolveQueries</FONT></P>
+	</OL>
+</OL>
+<P><BR><BR>
+</P>
+<P><BR><BR>
+</P>
+</BODY>
+</HTML>

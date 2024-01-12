@@ -1,0 +1,129 @@
+#                                               -*- Autoconf -*-
+# Process this file with autoconf to produce a configure script.
+
+AC_PREREQ(2.59)
+AC_INIT(BARd, 0.0.2, krivoshey@users.sourceforge.net)
+AM_INIT_AUTOMAKE(BARd, 0.0.2, krivoshey@users.sourceforge.net)
+AC_CONFIG_SRCDIR([src/barcode.cc])
+AC_CONFIG_HEADER([src/config.h])
+
+AC_PREFIX_DEFAULT(/etc/MOOd/BARCODE)
+
+# Checks for programs.
+AC_PROG_CXX
+AC_PROG_CC
+AC_PROG_LIBTOOL
+
+# Checks for libraries.
+
+AC_CHECK_LIB([dl], [dlopen])
+AC_CHECK_LIB([c_r], [pthread_create])
+AC_CHECK_LIB([pthread], [pthread_create])
+
+##############################################################################
+# LibXML2
+
+AC_ARG_WITH(libxml,
+[  --with-libxml	libXML2 installation prefix ],
+xml_prefix=$withval,xml_prefix="/usr")
+
+AC_MSG_CHECKING([for the libXML2 library])
+
+alt_lib1="/usr/local/lib"
+
+libxml_ok=no
+xml_libs="$xml_prefix/lib"
+xml_includes="$xml_prefix/include/libxml2"
+
+AC_MSG_RESULT([$xml_libs])
+
+if test -n "$xml_libs"
+then
+  LIBS="-L$xml_libs $LIBS"
+  AC_CHECK_LIB(xml2,xmlParseFile,libxml_ok=yes,libxml_ok=no)
+  if test "x$libxml_ok" != "xyes"
+  then
+    AC_MSG_ERROR([Could not find libxml2 in '$xml_libs'. Try another location.])
+  fi
+fi
+
+SAVE_LIBS=$LIBS
+
+# check alternate
+if test "x$libxml_ok" != "xyes"
+then
+  LIBS="-L$alt_lib1 $SAVE_LIBS"
+  AC_CHECK_LIB(xml2,xmlDocGetRootElement,libxml_ok=yes,libxml_ok=no)
+fi
+
+if test "x$libxml_ok" != "xyes"
+then
+    AC_MSG_ERROR([Could not find libxml in '$alt_lib1' or '$xml_libs'. Please specify location])
+fi
+
+# headers
+AC_MSG_CHECKING([for libXML2 include files])
+
+# common alternate ssl_include locations
+alt_inc1="/usr/local/include/libxml2"
+
+if test ! -f "$xml_includes/libxml/parser.h"
+then
+  if test ! -f "$alt_inc1/libxml/parser.h"
+  then
+    AC_MSG_RESULT(no)
+    AC_MSG_ERROR([Could not find the libxml include file libxml/parser.h in '$alt_inc1', '$xml_includes'])
+  else
+    AC_MSG_RESULT($alt_inc1)
+    LIBXML_INCLUDES="-I$alt_inc1"
+    AC_SUBST(LIBXML_INCLUDES)
+  fi
+else
+    AC_MSG_RESULT($xml_includes)
+    LIBXML_INCLUDES="-I$xml_includes"
+    AC_SUBST(LIBXML_INCLUDES)
+fi
+
+##############################################################################
+
+# Checks for header files.
+AC_HEADER_DIRENT
+AC_HEADER_STDC
+AC_HEADER_SYS_WAIT
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdint.h stdlib.h string.h sys/file.h sys/ioctl.h sys/socket.h sys/time.h syslog.h unistd.h utime.h])
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_TYPE_PID_T
+AC_HEADER_TIME
+
+# Checks for library functions.
+AC_FUNC_FORK
+AC_FUNC_SELECT_ARGTYPES
+AC_CHECK_FUNCS([select strerror tzset])
+
+
+
+##############################################################################
+
+# Compiler features options
+CXXFLAGS="${CXXFLAGS} ${PTH_CFLAGS} -fno-exceptions -fno-rtti"
+# Optimization options
+CXXFLAGS="${CXXFLAGS} -O2 -fomit-frame-pointer -fexpensive-optimizations"
+# Compiling options
+CXXFLAGS="${CXXFLAGS} -pipe"
+# Warning options 
+CXXFLAGS="${CXXFLAGS} -Werror -Wall -Winline"
+# 
+CXXFLAGS="${CXXFLAGS} -D_REENTRANT -D_THREAD_SAFE"
+
+# All is same for C
+CFLAGS=$CXXFLAGS
+
+##############################################################################
+
+
+AC_CONFIG_FILES([Makefile
+                 src/Makefile
+		 conf/Makefile])
+AC_OUTPUT

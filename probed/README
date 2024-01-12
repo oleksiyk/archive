@@ -1,0 +1,252 @@
+NAME
+
+probed(8) - A simple QOS probe
+
+SYNOPSIS
+
+probed [ -c config-file ] [ -d debug-level ] [ -e ] [ -f ] [ -g ] [ -h history-file ] [ -i packet_count ] [ -l logfile ] [ -p port ] [ -t timeout ] [ -u user ] [-v ] [ remote-system ]
+
+DESCRIPTION
+
+        probed is a lightweight probe daemon that may be utilized to determine rudimentary QOS metrics between the system the probe operates on and a second system. It may be queried through a port or invoked in a single use from the command line by specifying the remote-system as an IP address or a hostname. If remote_system is not specified, probed runs in the background as a daemon.
+
+        probed sends -i packets to the remote host as rapidly as possible and computes the latency, jitter, and packet loss. The configuration file can set a maximum number of packets, max_packets, to moderate potential abuse.
+
+        probed then returns a computed Mean Opinion Score (MOS) score between 1 and 5, with 1 being the lowest, and 5 being the highest. This score is computed from the jitter, latency, and packet loss.  The latency, jitter, and loss are based on the following, which may be overridden in probed.conf:
+
+        excellent = 5
+        good = 4
+        fair = 3
+        poor = 2
+        bad = 1
+
+Latency thresholds:
+        latency_excellent       <50ms
+        latency_good            50 - 100ms
+        latency_fair            150-300ms
+        latency_poor            >300ms
+
+Jitter thresholds
+        jitter_excellent                0-10ms
+        jitter_good             10-20ms
+        jitter_fair             20-50ms
+        jitter_poor             >50ms
+
+Loss thresholds
+        loss_excellent          0-0.5%
+        loss_good               0.5-1.5%
+        loss_fair               1.5-2%
+        loss_poor               >2%
+
+        The default sample size for probed is 10 icmp packets. This may be changed using the -e and -i options or by setting OPTIONS=ECHO or ITERATIONS=n
+
+
+OPTIONS
+
+-c config-file
+Use config-file as the configuration file instead of the default, /etc/probed.conf. To ensure that the reloading the configuration file continues to work after the server has changed its working directory due to a possible directory option in the config file, config-file should be an absolute pathname.
+
+-d debug-level
+Set the daemon's debug level to debug-level. Debugging traces from probed become more verbose as te the debugging level increases.
+
+-e
+Use the tcp echo port rather than icmp. Send the
+string 'echo_string' to the echo port.
+
+ -f
+Run the server in the foreground (i.e. do not
+daemonize).
+
+ -g
+Run  the  server  in  the  foreground  and  force all
+logging to stderr.
+
+-h history-file
+Gather probe queries and results in history-file. The format of history-file is:
+
+Month date time hostname process_name[pid]: QUERY=remote_host (or host ip address) RESULT='result string from query'
+
+        EXAMPLE:
+
+Jun 6 04:30:06 queryhost probed[3466]: QUERY=host.example.net RESULT='3.4'
+
+-i packet count
+Each probe of the remote end should involve at least i iterations. Values less than 3 are ignored.
+
+-l logfile
+        Log all commands, sources, and results to logfile.
+Different from history file in that it contains a log
+of all traffic, not just queries.
+
+-p port
+        Listen on port for queries rather than the default of 665.
+
+-t timeout
+        Do not let queries exceed timeout milliseconds.
+
+-u user
+setuid() to user after completing privileged
+operations, such as creating sockets that listen on
+privileged ports.
+
+-v
+        Report the version number to stdout and exit.
+
+COMMANDS AND ACTIONS
+
+The following are plain text commands that may be sent to probed and appropriate responses. Each it terminated with a \n:
+
+        HELO myhostname - Specify who is placing the query.
+Required as first command.
+
+        PACKETS=[ number ] - How many packets to send. Not required.
+
+        QUERY=[hostname] or [ip address] - Query the following host. Required
+
+        VERBOSE=ON - Turn verbose mode on. Not required. Verbose mode modifies the returned information to a QUERY.
+
+        OPTIONS=[] - Reserved for later options that probed may specify. Not Required.
+
+        BYE - Terminate the session. Required.
+
+The actions taken and response to the above commands are:
+
+        HELO myhostname\n
+
+Returns:
+
+                        WELCOME myhostname\n  - myhostname passes authentication
+or
+                        DENIED myhostname\n  - myhostname fails authentication
+and the session terminated.
+
+        PACKETS=[ number ] \n
+
+Returns:
+
+                        PACKETS=[ number ]\n - How many packets will be sent.
+
+        QUERY=[remote_hostname] or [remote_ip_address]\n
+
+                Returns:
+
+                        If VERBOSE=OFF returns
+                                MOS=[ 1.0 - 5.0, -1.0 ]\n
+Where MOS is a score between 1.0 and 5.0.
+Returns -1.0 if an error occurred.
+                        If VERBOSE=ON
+                                MOS=[ 1.0 - 5.0 ], JITTER=[ jitter in ms],
+LATENCY=[ latency in ms ],
+LOSS=[ n.n percent packet loss ]\n
+Where MOS is a score and other potentially
+valuable information.
+
+        VERBOSE=[null,ON,OFF]\n
+
+                Returns:
+
+VERBOSE=[ON,OFF]\n - Returns ON or OFF to confirm change.
+If command is null, returns current VERBOSE status.
+
+        OPTIONS=[DEFAULT,options to be determined, null]\n
+
+
+Returns:
+
+OPTIONS=[DEFAULT]\n reset options to default and return
+ 'DEFAULT'
+If command is [ options ] return options confirmed.
+If command is null, return currently set options
+
+        BYE
+                Returns:
+
+BYE and close connection.
+
+SIGNALS
+
+In routine operation, signals may be used to control probed.
+
+SIGHUP - Force a reload of the server.
+
+        SIGINT, SIGTERM - Shut down the server.
+
+        The result of sending any other signals to probed is undefined.
+
+ CONFIGURATION
+        The probed configuration file follows standard config file rules and is documented inline. The example config file /etc/probed.conf is:
+
+#       probed.conf - probed config file
+#
+# Access section
+# by default, access to probed is denied to all hosts. Hostnames, domains,
+# specific ip addresses and ip address ranges may all be permitted specifically.
+# This should change to a secured method as soon as possible.
+#
+
+allow 127.0.0.1 # Allow specific IP address
+allow localhost         # Allow hostname
+allow 204.130.216/24    # Allow IP address range
+allow 192.168.1.1       # Allow specific host
+allow example.com       # Allows all hosts in example.com
+
+
+#
+#Default Values
+#
+
+logfile=/var/log/probed # if unspecified, defaults to /var/log/probed
+
+packets=10              #if unspecified, default to 10
+max_packets=10  #maximum number of packets. If unspecified, 10
+type=ICMP               # Use ping or ECHO
+#type=ECHO              # use a TCP connection to the ECHO port
+port=665                # Use as alternate to default port of 665
+
+debug_level=0           # debugging level. Default is 0, 9 is max.
+
+history_file=/var/log/probed.hx #where to place the history file.
+
+user=nobody             # default user to run as.
+timeout=300             # wait no longer than timeout ms for a packet to return
+
+echo_string='probed'    #The string used when testing with the echo port
+
+# tunable parameters
+
+excellent=5
+good=4
+fair=3
+poor=2
+bad=1
+
+ latency_excellent=(0,50)               # 0- 50 ms
+latency_good=(51,100)           # 51- 100ms
+latency_fair=(101,300)          # 101 - 300ms
+latency_poor=(301,0)                    #  > 301 ms
+
+jitter_excellent        =(0,10)                 # 0-10ms
+jitter_good=(11-20)                     # 11 - 20ms
+jitter_fair=(21,50)                     # 21 - 50 ms
+jitter_poor=(51,0)                      # > 51 ms
+
+loss_excellent=(0,0.50)         # 0 - 0.5%
+loss_good0(0.51, 1.5)                   # 0.5-1.5%
+loss_fair=(1.51,2.00)                   # 1.5-2%
+loss_poor=(2.01,0)                      # >2%
+
+FILES
+        /etc/probed.conf        - probed configuration file
+        /var/log/probed - probed logging
+        /var/log/probed.hx      - probed history
+
+BUGS
+        Probed is rudimentary at best. There is much improvement to be had. The next version should be capable of being a client server based model.
+
+SEE ALSO
+        ping(8),
+
+HISTORY
+        Written 6/6/5
+AUTHOR
+        Bob Bownes, bbownes@tellocorp.com

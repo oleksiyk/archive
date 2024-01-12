@@ -1,0 +1,30 @@
+diff -ru shotgund/lib/rfc1035.h shotgund-m/lib/rfc1035.h
+--- shotgund/lib/rfc1035.h	2006-02-09 23:16:24.000000000 +0200
++++ shotgund-m/lib/rfc1035.h	2006-02-09 22:16:50.000000000 +0200
+@@ -90,6 +90,7 @@
+     u_int8_t    arcount_lo;
+ 
+     inline u_int8_t get_qr()const{ return ((flags_hi & 128) >> 7); }
++    inline void set_qr(u_int8_t qr){ flags_hi |= ((qr << 7) & 128); }
+     inline u_int8_t get_opcode()const{ return ((flags_hi & 120) >> 3);}
+     inline void set_opcode(u_int8_t opcode){ flags_hi |= ((opcode << 3) & 120); }
+     inline u_int8_t get_aa()const{ return ((flags_hi & 4 ) >> 2); }
+diff -ru shotgund/src/resolver_thread.cc shotgund-m/src/resolver_thread.cc
+--- shotgund/src/resolver_thread.cc	2006-02-09 23:15:54.000000000 +0200
++++ shotgund-m/src/resolver_thread.cc	2006-02-09 22:16:07.000000000 +0200
+@@ -307,6 +307,7 @@
+     log->log(4, obj->id, 0, "Return: NXDOMAIN, %.2fms", ms);
+ 
+     resolvers[0]->getQueryMessage()->header.set_rcode(RFC1035_RCODE_NXDOMAIN);
++    resolvers[0]->getQueryMessage()->header.set_qr(1);
+ 
+     if(!resolvers[0]->norewrite){
+ 
+@@ -544,6 +545,7 @@
+ 
+             resolvers[k]->getResponseMessage()->header.set_nscount(0);
+             resolvers[k]->getResponseMessage()->header.set_arcount(0);
++            resolvers[k]->getResponseMessage()->header.set_qr(1);
+ 
+             ivec[0].iov_base = &resolvers[k]->getResponseMessage()->header;
+             ivec[0].iov_len = 12;

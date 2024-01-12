@@ -1,0 +1,196 @@
+
+                              AsyncResolv library
+
+                         asynchronous DNS query library
+
+              by Aleksey Krivoshey krivoshey@users.sourceforge.net
+
+   1. Introduction
+
+        1. Licensing
+
+        2. Download
+
+   2. Using library
+
+        1. initialization
+
+        2. Prepare query
+
+        3. Asynchronously resolve query and/or wait for completion
+
+        4. Get reply
+
+        5. Get all question fields from reply
+
+        6. Get all headers from reply
+
+        7. Get all answers (answer RR's)
+
+        8. Get all authoritative answers
+
+        9. Additional answers
+
+        10. Print __all__ resource records
+
+        11. Get all RR's of some type
+
+        12. Cleanup before next query
+
+   1. Introduction.
+       AsyncResolv is an asynchronous DNS query library written in C++.
+       Resolver is capable of most RFC1035 resource records parsing, supports
+       queries over UDP and over TCP (if UDP failed)
+
+        1. Library is licensed under GNU Lesser ( Library ) General Public
+            License (LGPL)
+
+        2. Download
+            Latest version is available from
+            http://sourceforge.net/projects/asyncresolv/
+            http://www.foss.kharkov.ua/~voodoo/
+
+   2. Using library
+
+        1. Initialization
+
+             1. Create resolver object:
+
+                 AsyncDNSResolver * resolver = new AsyncDNSResolver();
+
+             2. Initialize it
+
+                 if(resolver->initialize() == -1){
+                   return -1;
+                 }
+
+        2. Prepare query
+
+             1. set query type (recursive, status/normal/inverse query)
+
+                 if(resolver->prepareQuery(RFC1035_OPCODE_QUERY,
+                 RFC1035_RESOLVE_RECURSIVE) == -1){
+                   return -1;
+                 }
+
+                 Possible values for opcode are:
+                 - RFC1035_OPCODE_QUERY
+                 - RFC1035_OPCODE_IQUERY
+                 - RFC1035_OPCODE_STATUS
+
+                 Possible values for recursive behavior are:
+                 - RFC1035_RESOLVE_RECURSIVE
+                 - 0
+
+             2. set query ( query name, resource record type, class)
+
+                 if(resolver->addQuery("aol.com", RFC1035_TYPE_MX,
+                 RFC1035_CLASS_IN) == -1){
+                   return -1;
+                 }
+
+        3. Asynchronously resolve query and/or wait for completion
+
+             1. Using resolver->wait(msec) function
+
+                 while(resolver->resolveQueries() == EAGAIN){
+                   if(resolver->wait(10000) != 0){
+                     if(resolver->timedout() == -1){
+                       break;
+                     }
+                   }
+                 }
+
+             2. Using own poll() loop
+
+                 while(resolver->resolveQueries() == EAGAIN){
+                   int e = poll(resolver->getPollfd(), 1, 10000);
+                     if(e == -1){
+                     perror("poll() failed");
+                     break;
+                   }
+                   if(e == 0){
+                     if(resolver->timedout() == -1){
+                       break;
+                     }
+                   }
+                 }
+
+        4. Get reply
+
+            const AsyncDNSReply * reply = resolver->getReply();
+
+        5. Get all question fields from reply
+
+            const RFC1035_MessageQuestion * question = reply->getQuestion();
+            printf("Questions:\n");
+            int i = 0;
+            while((question = reply->getQuestion(i++)) != NULL){
+              printf("qname=%s, qtype=%d, qclass=%d, header_id=%d\n",
+            question->qname, question->qtype, question->qclass,
+            question->header_id);
+            }
+
+        6. Get all headers from reply
+
+            const RFC1035_MessageHeader * header = NULL;
+            size_t i = 0;
+            printf("Headers:\n");
+            while((header = reply->getHeader(i++)) != NULL){
+              printf("ID=%d, RCODE=%d, %s\n", header->id,
+            header->get_rcode(), header->get_aa()?"Authoritative answer":"Not
+            authoritative answer");
+            }
+
+        7. Get all answers (answer RR's)
+
+            const RFC1035_RR * answer = NULL;
+            i = 0;
+            while((answer = reply->getAnswer(i++)) != NULL){
+              dump(answer);
+            }
+
+            --- dump() function is defined in example/test.cc ---
+
+        8. Get all authoritative answers
+
+            const RFC1035_RR * answer = NULL;
+            int i = 0;
+            while((answer = reply->getAuthority(i++)) != NULL){
+              dump(answer);
+            }
+            --- dump() function is defined in example/test.cc ---
+
+        9. Additional answers
+
+            const RFC1035_RR * answer = NULL;
+            int i = 0;
+            while((answer = reply->getAdditional(i++)) != NULL){
+              dump(answer);
+            }
+            --- dump() function is defined in example/test.cc ---
+
+        10. Print __all__ resource records
+
+            const RFC1035_RR * answer = NULL;
+            int i = 0;
+            while((answer = reply->getRR(i++)) != NULL){
+              dump(answer);
+            }
+
+        11. Get all RR's of some type
+            Resource records of the same type are linked in the reverse
+            unidirectional list:
+
+            // All MX resource records
+            const RFC1035_RR * answer = NULL;
+            answer = reply->getLastRRByType(RFC1035_TYPE_MX);
+            while(answer){
+              dump(answer);
+              answer = answer->prevRR;
+            }
+
+        12. Cleanup before next query
+
+            resolver->cleanup(); //must be called after each call to
+            resolveQueries

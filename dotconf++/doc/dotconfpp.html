@@ -1,0 +1,348 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+	
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=koi8-r">
+  <title>DOTCONF++ library</title>
+</head>
+<body lang="ru-RU">
+<p align="center"><font size="4"><b>DOTCONF++ library</b></font></p>
+<p align="center"><font size="3">library for parsing configuration files</font></p>
+<p align="center"><font size="2"><font size="3">by Aleksey Krivoshey </font><a href="mailto:voodoo@foss.kharkov.ua"><font size="3">voodoo@foss.kharkov.ua</font></a></font></p>
+<br>
+<ol>
+	<li><a href="#Introduction_"><font size="3">Introduction</font></a> 	
+    <ul>
+	 <li><font size="3">Licensing</font> 	</li>
+    </ul>
+	</li>
+  <li><a href="#Features"><font size="3">Features</font></a> 	</li>
+  <li><a href="#Using_library"><font size="3">Using library</font></a></li>
+  <ul>
+    <li><font size="3"><a href="#Opening_configuration_file">Opening configuration file</a></font></li>
+    <li><font size="3"><a href="#Error_handling">Error handling</a></font></li>
+    <li><a href="#Retrieving_parameters_and_values">Retrieving parameters and values</a></li>
+  </ul>
+  <li><a href="#Download"><font size="3">Download</font></a> </li>
+</ol>
+<br>
+<ol>
+	<li><font size="3"><a name="Introduction_"></a>Introduction</font> 	<br>
+	
+    <p style="margin-left: 1em;"> dotconf++ is a dotconf (<a href="http://www.azzit.de/dotconf/">http://www.azzit.de/dotconf/</a>)
+	like configuration file parser written in C++. It supports macro
+	substitution from the environment or from the file itself, config 	file
+inclusion, easy handling of XML like tags, checking for 	required tags,
+and more. The whole document (with all inclusions) is 	parsed into a
+useful tree structure that is easy to use in your 	program<br>
+    <br>
+    </p>
+	
+    <ol>
+		<li>Licensing.<br>
+Library is licensed under <b>GNU Lesser ( Library ) General Public License (LGPL)<br>
+        </b><br>
+	</li>
+    </ol>
+	</li>
+  <li><a name="Features"></a>Features<br>
+    <br>
+	
+    <ol>
+		<li>Comments:<br>
+        <font color="#0000ff" style="color: rgb(153, 0, 0);"> 			# some
+comment<br>
+			; some comment<br>
+        <br>
+        </font> 		</li>
+      <li>Multivalue parameters<br>
+        <font color="#0000ff" style="color: rgb(153, 51, 0);">
+			ParameterName value1 value2 value3 &#8220;value4 with spaces&#8221;<br>
+			ParameterName1 = value11 value12 value13<br>
+        <br>
+        </font> 		</li>
+      <li>Multiline parameters<br>
+			<font color="#0000ff"><span style="color: rgb(153, 0, 0);">
+			MultilineText id1 "Quick brown \</span><br
+ style="color: rgb(153, 0, 0);">
+        <span style="color: rgb(153, 0, 0);"> 			&nbsp;&nbsp;&nbsp;fox
+jumps...\</span><br style="color: rgb(153, 0, 0);">
+        <span style="color: rgb(153, 0, 0);"> 			&nbsp;&nbsp;&nbsp;bla
+bla bla"</span><br style="color: rgb(153, 0, 0);">
+			<br>
+        <span style="color: rgb(153, 0, 0);">CustomLog
+/usr/local/apache-ssl/logs/ssl_request_log \</span><br
+ style="color: rgb(153, 0, 0);">
+        <span style="color: rgb(153, 0, 0);"> 			&nbsp;&nbsp;&nbsp;"%t
+%h %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%r\" %b"<br>
+        <br>
+        </span></font> 		</li>
+      <li>Macro substitution from environment or from config file, with
+default values if substitution not found<br>
+			<font color="#0000ff" style="color: rgb(153, 0, 0);">LogFile
+${TEMP_PATH:-"/tmp/default temp path"}<br>
+        <br>
+			LogOptions ${PWD:-/tmp}/log_${USER}<br>
+        <br>
+        </font> 		</li>
+      <li>Tags ( tags are normal parameters, but they become parent for
+all parameters between opening and closing tag)<br>
+			<font color="#0000ff" style="color: rgb(153, 0, 0);">&lt;SectionTag
+allOnOneLine&gt; onLineParameter=onLineValue &lt;/SectionTag&gt;<br>
+        <br>
+			&lt;SectionTag tagValue	tagValue2&gt;<br>
+			&nbsp;&nbsp;&nbsp;inTagParameter "disabled&#8221; # comment<br>
+			&lt;/SectionTag&gt;<br>
+        <br>
+			#nested tags<br>
+			&lt;SectionTag tagValue&gt;<br>
+			&nbsp;&nbsp;&nbsp;TagEnable #parameter without value<br>
+			&nbsp;&nbsp;&nbsp;&lt;SubSection SubsectionName&gt;<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;subsectionParameterDisabled
+Yes;comment<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;subsectionParameter2Disabled No<br>
+			&nbsp;&nbsp;&nbsp;&lt;/SubSection&gt;<br>
+			&lt;/SectionTag&gt; </font> 		
+        <p style="color: rgb(153, 0, 0);"></p>
+		</li>
+      <li>Quotes and line-terminators inside values<br>
+			<font color="#0000ff"> 			<span style="color: rgb(153, 0, 0);">Text =
+"this program is \"dot conf-like\"" "new line starts\nhere"<br>
+        <br>
+        </span></font> 		</li>
+      <li>Config file inclusion ( with recursion checks )<br>
+			<font color="#0000ff" style="color: rgb(153, 0, 0);">DOTCONFPPIncludeFile ${PWD}/modules.conf<br>
+        <br>
+        </font></li>
+      <li><span style="font-weight: bold;">here are example configuration files:</span> 	</li>
+      <ul>
+        <li><a href="insmtpd.conf">insmtpd.conf</a></li>
+        <li><a href="log.conf">log.conf</a></li>
+        <li><a href="modules.conf">modules.conf</a></li>
+        <li><a href="ssl.conf">ssl.conf</a></li>
+      </ul>
+	
+    </ol>
+    <br>
+	</li>
+  <li><a name="Using_library"></a>Using library</li>
+  <ol>
+    <li><a name="Opening_configuration_file"></a>Opening configuration
+file</li>
+    <ul>
+      <li>Create configuration document object:<br>
+        <br style="color: rgb(0, 0, 255);">
+        <span style="color: rgb(0, 0, 255);">DOTCONFDocument * conf =
+new DOTCONFDocument(DOTCONFDocument::CASEINSENSITIVE);<br>
+        <span style="color: rgb(0, 0, 0);">or<br>
+        </span></span><span style="color: rgb(0, 0, 255);">DOTCONFDocument
+* conf = new DOTCONFDocument(DOTCONFDocument::CASESENSITIVE);<br>
+        <br>
+        </span></li>
+      <li><span style="color: rgb(0, 0, 255);"><span
+ style="color: rgb(0, 0, 0);">[OPTIONAL] Set required options<br>
+        <br>
+        <span style="color: rgb(0, 0, 255);">const char *
+requiredOptions[] = {"Users", NULL};</span><br
+ style="color: rgb(0, 0, 255);">
+        <span style="color: rgb(0, 0, 255);">conf-&gt;setRequiredOptionNames(requiredOptions);</span><br>
+        </span><br>
+        </span></li>
+      <li><span style="color: rgb(0, 0, 255);"></span>give it
+configuration file:<br>
+        <br>
+        <span style="color: rgb(0, 0, 255);">if(conf-&gt;setContent("example1.conf")
+== -1){</span><br style="color: rgb(0, 0, 255);">
+        <span style="color: rgb(0, 0, 255);">&nbsp;&nbsp;&nbsp; return
+-1;</span><br style="color: rgb(0, 0, 255);">
+        <span style="color: rgb(0, 0, 255);">}<br>
+        <br>
+        <span style="color: rgb(0, 0, 0);">DOTCONFDocument::setContent()
+will return -1 on error. Error message will printed to stderr.<br>
+See also error handling.</span></span></li>
+    </ul>
+    <li><a name="Error_handling"></a><span
+ style="color: rgb(0, 0, 255);"><span style="color: rgb(0, 0, 0);"></span></span>Error
+handling<br>
+You can inherit your class from DOTCONFDocument overriding virtual
+function<br>
+      <span style="color: rgb(0, 0, 255);">virtual void error(int
+lineNum, const char * fileName, const char * fmt, ...); :<br>
+      <br>
+      <span style="color: rgb(51, 51, 255);">class MyConf : public
+DOTCONFDocument</span></span><br style="color: rgb(51, 51, 255);">
+      <span style="color: rgb(51, 51, 255);">{</span><br
+ style="color: rgb(51, 51, 255);">
+      <span style="color: rgb(51, 51, 255);">private:</span><br
+ style="color: rgb(51, 51, 255);">
+      <span style="color: rgb(51, 51, 255);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+virtual void error(int lineNum, const char *fileName, const char *fmt,
+...);</span><br style="color: rgb(51, 51, 255);">
+      <span style="color: rgb(51, 51, 255);">public:</span><br
+ style="color: rgb(51, 51, 255);">
+      <span style="color: rgb(51, 51, 255);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+MyConf(DOTCONFDocument::CaseSensitive _cs):DOTCONFDocument(_cs){};</span><br
+ style="color: rgb(51, 51, 255);">
+      <span style="color: rgb(51, 51, 255);">};</span><br
+ style="color: rgb(51, 51, 255);">
+      <br>
+Then you can log messages anywhere you want implementing your own error
+function.<br>
+NOTE: If it is general error( not at configuration parsing ), then <span
+ style="color: rgb(51, 51, 255);">fileNum=0</span> and <span
+ style="color: rgb(51, 51, 255);">fileName=NULL</span>.<br>
+      <br>
+      <span style="color: rgb(51, 51, 255);">void MyConf::error(int
+lineNum, const char * fileName, const char * fmt, ...)</span><br
+ style="color: rgb(51, 51, 255);">
+      <span style="color: rgb(51, 51, 255);">{</span><br
+ style="color: rgb(51, 51, 255);">
+      <span style="color: rgb(51, 51, 255);">&nbsp;&nbsp;&nbsp; va_list
+args;</span><br style="color: rgb(51, 51, 255);">
+      <span style="color: rgb(51, 51, 255);">&nbsp;&nbsp;&nbsp;
+va_start(args, fmt);</span><br style="color: rgb(51, 51, 255);">
+      <span style="color: rgb(51, 51, 255);">&nbsp;&nbsp;&nbsp; </span><br
+ style="color: rgb(51, 51, 255);">
+      <span style="color: rgb(51, 51, 255);">&nbsp;&nbsp;&nbsp; size_t
+len = (lineNum!=0?strlen(fileName):0) + strlen(fmt) + 50;</span><br
+ style="color: rgb(51, 51, 255);">
+      <br style="color: rgb(51, 51, 255);">
+      <span style="color: rgb(51, 51, 255);">&nbsp;&nbsp;&nbsp; char *
+buf = (char*)mempool-&gt;alloc(len);</span><br
+ style="color: rgb(51, 51, 255);">
+      <br style="color: rgb(51, 51, 255);">
+      <span style="color: rgb(51, 51, 255);">&nbsp;&nbsp;&nbsp;
+if(lineNum)</span><br style="color: rgb(51, 51, 255);">
+      <span style="color: rgb(51, 51, 255);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(void) snprintf(buf, len, "DOTCONF++: file '%s', line %d: %s",
+fileName, lineNum, fmt);</span><br style="color: rgb(51, 51, 255);">
+      <span style="color: rgb(51, 51, 255);">&nbsp;&nbsp;&nbsp; else</span><br
+ style="color: rgb(51, 51, 255);">
+      <span style="color: rgb(51, 51, 255);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(void) snprintf(buf, len, "DOTCONF++: %s", fmt);</span><br
+ style="color: rgb(51, 51, 255);">
+      <br style="color: rgb(51, 51, 255);">
+      <span style="color: rgb(51, 51, 255);">&nbsp;&nbsp;&nbsp;
+buf[len-1] = 0;</span><br style="color: rgb(51, 51, 255);">
+      <br style="color: rgb(51, 51, 255);">
+      <span style="color: rgb(51, 51, 255);">&nbsp;&nbsp;&nbsp;
+log-&gt;vlog(LogMessageType::MESSAGE_ERROR, 0, 0, buf, args);</span><br
+ style="color: rgb(51, 51, 255);">
+      <br style="color: rgb(51, 51, 255);">
+      <span style="color: rgb(51, 51, 255);">&nbsp;&nbsp;&nbsp;
+va_end(args);</span><br style="color: rgb(51, 51, 255);">
+      <span style="color: rgb(51, 51, 255);">}</span><br
+ style="color: rgb(0, 0, 255);">
+    </li>
+    <li><a name="Retrieving_parameters_and_values"></a>Retrieving
+parameters and values</li>
+    <ol>
+      <li>Find parameter by name in the global scope of configuration
+file:<br>
+        <span style="color: rgb(51, 51, 255);">const
+DOTCONFDocumentNode * node = conf-&gt;findNode("Users");</span><br>
+        <br>
+        <span style="color: rgb(153, 0, 0);">Users = voodoo boss kid</span><br>
+        <br>
+      </li>
+      <li>Find parameter by name in the parent parameter ( inside tag ):<br>
+        <span style="color: rgb(51, 51, 255);"> const
+DOTCONFDocumentNode * pnode = conf-&gt;findNode("Parent");</span><br
+ style="color: rgb(51, 51, 255);">
+        <span style="color: rgb(51, 51, 255);"> const
+DOTCONFDocumentNode * node = conf-&gt;findNode("Users", pnode);</span><br>
+        <br>
+        <span style="color: rgb(153, 0, 0);">&lt;Parent&gt;</span><br
+ style="color: rgb(153, 0, 0);">
+        <span style="color: rgb(153, 0, 0);">&nbsp;&nbsp;&nbsp; Users =
+voodoo boss kid</span><br style="color: rgb(153, 0, 0);">
+        <span style="color: rgb(153, 0, 0);">&lt;/Parent&gt;</span><br
+ style="color: rgb(153, 0, 0);">
+        <br>
+      </li>
+      <li>Find parameter by name starting from some node ( usefull when
+there are many parameters with the same name):<br>
+        <span style="color: rgb(51, 51, 255);">const
+DOTCONFDocumentNode * node = NULL;</span><br
+ style="color: rgb(51, 51, 255);">
+        <span style="color: rgb(51, 51, 255);">while((node =
+conf-&gt;findNode("Users", NULL, node)) != NULL){</span><br
+ style="color: rgb(51, 51, 255);">
+        <span style="color: rgb(51, 51, 255);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+printf("Users value = '%s'\n", node-&gt;getValue());</span><br
+ style="color: rgb(51, 51, 255);">
+        <span style="color: rgb(51, 51, 255);">}<br>
+        <br>
+        <span style="color: rgb(153, 0, 0);">Users = voodoo</span><br
+ style="color: rgb(153, 0, 0);">
+        <span style="color: rgb(153, 0, 0);">Users = kid</span><br
+ style="color: rgb(153, 0, 0);">
+        <span style="color: rgb(153, 0, 0);">Users = boss<br>
+        <br>
+        </span></span></li>
+      <li><span style="color: rgb(51, 51, 255);"><span
+ style="color: rgb(153, 0, 0);"></span></span>Find sibling node<br>
+        <span style="color: rgb(0, 0, 255);">const DOTCONFDocumentNode
+* nnode = node-&gt;getNextNode();<br>
+        </span>and <br style="color: rgb(0, 0, 255);">
+        <span style="color: rgb(0, 0, 255);">const DOTCONFDocumentNode
+* nnode = node-&gt;getPreviousNode();</span><br>
+        <br>
+      </li>
+      <li>Find parent or first child node<br>
+        <span style="color: rgb(0, 0, 255);">const DOTCONFDocumentNode
+* pnode = node-&gt;getParentNode();<br>
+        <span style="color: rgb(0, 0, 0);">and</span><br>
+        </span><span style="color: rgb(0, 0, 255);">const
+DOTCONFDocumentNode * cnode = node-&gt;getChildNode();</span><br
+ style="color: rgb(0, 0, 255);">
+        <br>
+      </li>
+      <li>Get all child nodes<br>
+        <span style="color: rgb(0, 0, 255);">const DOTCONFDocumentNode
+* cnode = node-&gt;getChildNode();</span><br
+ style="color: rgb(0, 0, 255);">
+        <span style="color: rgb(0, 0, 255);">while(cnode){</span><br
+ style="color: rgb(0, 0, 255);">
+        <span style="color: rgb(0, 0, 255);">&nbsp;&nbsp;&nbsp;
+printf("childNode '%s', value='%s'\n", cnode-&gt;getName(),
+cnode-&gt;getValue());</span><br style="color: rgb(0, 0, 255);">
+        <span style="color: rgb(0, 0, 255);">&nbsp;&nbsp;&nbsp; cnode =
+cnode-&gt;getNextNode();</span><br style="color: rgb(0, 0, 255);">
+        <span style="color: rgb(0, 0, 255);">}<br>
+        <br>
+        </span></li>
+      <li><span style="color: rgb(0, 0, 255);"></span>Get all parameter
+values<br>
+        <span style="color: rgb(0, 0, 255);">int i = 0;</span><br
+ style="color: rgb(0, 0, 255);">
+        <span style="color: rgb(0, 0, 255);">const char * v = NULL;</span><br
+ style="color: rgb(0, 0, 255);">
+        <span style="color: rgb(0, 0, 255);">while((v =
+node-&gt;getValue(i++)) != NULL){</span><br
+ style="color: rgb(0, 0, 255);">
+        <span style="color: rgb(0, 0, 255);">&nbsp;&nbsp;&nbsp;
+printf("value='%s'\n", v);</span><br style="color: rgb(0, 0, 255);">
+        <span style="color: rgb(0, 0, 255);">}</span><br
+ style="color: rgb(0, 0, 255);">
+        <br>
+      </li>
+      <li>Get parameter location<br>
+        <span style="color: rgb(0, 0, 255);">int lineNum =
+node-&gt;getConfigurationLineNumber();</span><br
+ style="color: rgb(0, 0, 255);">
+        <span style="color: rgb(0, 0, 255);">const char * fileName =
+node-&gt;getConfigurationFileName();</span><br>
+        <br>
+      </li>
+    </ol>
+    <li><span style="font-weight: bold;">See also examples in the
+distribution</span><br>
+    </li>
+  </ol>
+  <li><a name="Download"></a>Download<br>
+Latest version is available from 		<a
+ href="http://www.foss.kharkov.ua/~voodoo/">http://www.foss.kharkov.ua/~voodoo/</a> </li>
+</ol>
+</body>
+</html>

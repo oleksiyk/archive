@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<BARd>
+   <!-- NOT IMPLEMENTED  -->
+   <NUMBER_SCANNERS_TO_FIND>1</NUMBER_SCANNERS_TO_FIND>
+
+   <!--
+      1=search the USB ports on init and find all scanners
+      0=use preconfigured USB port number only
+   -->
+   <!-- NOT IMPLEMENTED  -->
+   <FIND_SCANNER>1</FIND_SCANNER>
+
+   <!--
+      1..6
+   -->
+   <!-- NOT IMPLEMENTED  -->
+   <USE_USB_PORT>3</USE_USB_PORT>
+
+   <!--
+      what signal to use to alert main application
+   -->
+   <USE_SIGNAL>SIGUSR2</USE_SIGNAL>
+
+   <!--
+      path to main application pid-file
+   -->
+   <SIGNAL_APP_PID_FILE>/var/run/guid.pid</SIGNAL_APP_PID_FILE>
+
+   <!-- 
+      path to main application (to search PID through /proc fs)
+   -->
+   <SIGNAL_APP_PATH>/etc/MOOd/GUId/guid</SIGNAL_APP_PATH>
+
+   <!--
+      output location
+   -->
+   <BARCODE_OUTPUT_FILE>/tmp/barcode.log</BARCODE_OUTPUT_FILE>
+
+   <!--
+      error log
+   -->
+   <BARCODE_ERROR_LOG_FILE>/tmp/bard_error.log</BARCODE_ERROR_LOG_FILE>
+
+   <!--
+      error log level (0..2)
+   -->
+   <BARCODE_LOGLEVEL>2</BARCODE_LOGLEVEL>    
+
+   <!--
+      path to own pid file
+   -->
+   <BARCODE_PID_FILE>/tmp/bard.pid</BARCODE_PID_FILE>
+    
+</BARd>

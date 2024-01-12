@@ -1,0 +1,37 @@
+Tue Jul 13 12:57:14 2004 v0.0.4
+    - fixed ROOT domain names (".") parsing in replies
+
+Mon Jun 21 17:34:45 2004 v0.0.3
+    - fixed tcp socket descriptor leak in closeTCP()
+
+Tue May 11 12:32:27 2004 v0.0.3-rc2
+    - fixed parsing error with AAAA reply records
+
+Thu Mar 25 16:05:42 2004 v0.0.3-rc1
+    - replaced linear header id generation
+    
+Fri Jan 30 10:57:27 2004 v0.0.3-alpha
+    - basic (not well tested) support for IPv6 (AAAA RR)
+    - fixed small bug in MX RR parsing
+    - resolv.conf is read only once
+
+Mon Jul 14 17:27:41 2003 v0.0.2b
+    - new examples ( Alexander Biehl )
+    - tested on FreeBSD
+    - TXT_RR and HINFO_RR parsing
+
+Thu May 22 11:37:08 2003 v0.0.2a
+    - created some kind of documentation 
+    - code cleanups
+    
+Mon Mar 17 19:11:49 2003 v0.0.2
+    - "proper" system library is generated ( shared and static )
+	headers are installed in /usr/local/include/asyncresolv (by default)
+	and library is installed in /usr/local/lib
+
+
+Mon Mar 15 17:48:22 2003 v0.0.1
+    - first release
+    
+Aleksey Krivoshey krivoshey@users.sourceforge.net
+

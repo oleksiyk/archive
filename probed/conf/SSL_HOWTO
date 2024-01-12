@@ -1,0 +1,29 @@
+HOWTO setup SSL verification.
+
+Step 1. Create CA certificate:
+
+    - generate private key: 
+	$ openssl genrsa -des3 -out my-ca.key 2048
+    - get a self signed CA certifcate: 
+	$ openssl req -new -x509 -days 365 -key my-ca.key -out my-ca.crt
+    
+Step 2. Create server certificate:
+    - generate private key: 
+	$ openssl genrsa -des3 -out server.key 2048
+    - generate certificate request: 
+	$ openssl req -new -key server.key -out server.csr
+    - ask the CA to sign the request:
+	$ openssl x509 -req -in server.csr -out server.crt -CA my-ca.crt -CAkey my-ca.key -CAcreateserial -days 365
+    - Remove password phrase from the key:
+	$ openssl rsa -in server.key -out server-nopass.key
+
+Step 3. Create user certificate:
+    - proceed as in step 2 above.
+
+Step 4 (Optional). Create PKCS#12 (PFX) file (Mozilla, Netscape, MS Outlook, MSIE)
+    - create PEM certificate and key as in step 2 
+    - generate from them PKCS#12 file: 
+	$ openssl pkcs12 -export -in user.crt -inkey user.key -out user.pfx
+
+---    
+Oleksiy Kryvoshey oleksiy@voodoo.com.ua

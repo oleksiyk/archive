@@ -1,0 +1,45 @@
+Bard is small daemon to read input data from keyboard-like USB input devices
+(primarily simple USB barcode readers) using linux evdev mechanism.
+
+Before trying to use it, please check kernel support dor USB and evdev interface:
+
+1. kernel configuration:
+
+#
+# USB support
+#
+CONFIG_USB=m
+
+#
+# USB Controllers
+#
+CONFIG_USB_UHCI=m
+CONFIG_USB_UHCI_ALT=m
+CONFIG_USB_OHCI=m
+CONFIG_USB_EHCI_HCD=m
+
+#
+# USB Human Interface Devices (HID)
+#
+CONFIG_USB_HID=m
+CONFIG_USB_HIDDEV=m
+CONFIG_USB_HIDINPUT=m
+
+#
+# Input core support
+#
+CONFIG_INPUT=m
+CONFIG_INPUT_EVDEV=m
+
+2. check (and create if needed) for special char devices in /dev/input/..
+
+13 char 
+    64 = /dev/input/event0 First event queue
+    65 = /dev/input/event1 Second event queue
+    ...
+
+create them with this command:    
+    mknod input/event0 c 13 64
+    mknod input/event1 c 13 65
+    mknod input/event2 c 13 66
+    ...
