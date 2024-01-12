@@ -1,0 +1,2 @@
+SMTP:
+    - implement SSL CA revocations lists (CRL)

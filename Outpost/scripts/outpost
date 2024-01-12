@@ -1,0 +1,49 @@
+#!/bin/sh
+#
+
+OUTPOST_HOME=/home/voodoo/Projects/Outpost
+SERVICE=$2
+
+start() {
+	if [ -n "`/sbin/pidof outpost-$SERVICE`" ]; then
+		echo "outpost-$SERVICE: already running"
+		return 1
+	fi
+        echo "Starting outpost-$SERVICE: $OUTPOST_HOME/src/$SERVICE/outpost-$SERVICE $OUTPOST_HOME/conf/$SERVICE.conf"
+	$OUTPOST_HOME/src/$SERVICE/outpost-$SERVICE $OUTPOST_HOME/conf/$SERVICE.conf
+	sleep 1
+	if [ ! -n "`/sbin/pidof outpost-$SERVICE`" ]; then
+		echo "FAILED"
+		return 1
+	fi
+	echo "SUCCESS"
+}
+stop() {
+        # Stop daemons.
+        echo "Stopping outpost-"$SERVICE
+	killall outpost-$SERVICE
+}
+restart() {
+	echo "Restarting outpost-"$SERVICE
+	killall -1 outpost-$SERVICE
+}	
+
+
+# See how we were called.
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		restart
+		;;
+	*)
+        	echo $"Usage: $0 {start|stop|restart} service_name"
+		exit 1
+esac
+
+exit $?
+

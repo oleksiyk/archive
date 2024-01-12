@@ -1,0 +1,55 @@
+/*  Copyright (C) 2003 FOSS-On-Line <http://www.foss.kharkov.ua>,
+*   Aleksey Krivoshey <krivoshey@users.sourceforge.net>
+*
+*   This program is free software; you can redistribute it and/or modify
+*   it under the terms of the GNU General Public License as published by
+*   the Free Software Foundation; either version 2 of the License, or
+*   (at your option) any later version.
+*
+*   This program is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*   GNU General Public License for more details.
+*
+*   You should have received a copy of the GNU General Public License
+*   along with this program; if not, write to the Free Software
+*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+#ifndef OUTPOST_MODULE_MANAGER_H
+#define OUTPOST_MODULE_MANAGER_H
+
+#include "outpost.h"
+
+namespace Outpost {
+
+class ModuleManager
+{
+private:
+    typedef Module * (*OUTPOST_GET_MODULE_FUNC_T)(const char * _alias);
+
+    u_int8_t errlog;
+
+private:
+    struct ModuleInstance {
+        void * dlHandle;
+        Module * module;
+        ModuleInstance(void *_dlHandle, Module * _module):
+            dlHandle(_dlHandle), module(_module){}
+    };
+    const LogBase * log;
+    ModuleInstance ** loadedModules;
+    size_t loadedModulesCount;
+public:
+    ModuleManager();
+    virtual ~ModuleManager();
+
+    int loadModules(const DOTCONFDocumentNode * addModuleParentNode, Module::Type moduleType);
+
+    Module * getModuleByAlias(const char * moduleAlias)const;
+    Module * getModuleByType(Module::Type moduleType, const Module * prevFoundModule = NULL)const;
+};
+
+}; /* namespace Outpost */
+
+#endif

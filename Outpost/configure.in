@@ -1,0 +1,405 @@
+#                                               -*- Autoconf -*-
+# Process this file with autoconf to produce a configure script.
+
+AC_PREREQ(2.56)
+AC_INIT(Outpost, 0.0.1, krivoshey@users.sourceforge.net)
+AM_INIT_AUTOMAKE(Outpost, 0.0.1, krivoshey@users.sourceforge.net)
+AC_CONFIG_SRCDIR([src])
+AC_CONFIG_HEADER([src/config.h])
+
+##############################################################################
+# Checks for programs.
+##############################################################################
+AC_PROG_CXX
+AC_PROG_LIBTOOL
+
+##############################################################################
+# Checks for libraries.
+##############################################################################
+
+AC_CHECK_LIB([dl], [dlopen])
+AC_CHECK_LIB([c_r], [pthread_create])
+AC_CHECK_LIB([pthread], [pthread_create])
+
+##############################################################################
+# MySQL
+
+AC_ARG_WITH(mysql,
+[  --without-mysql	Disables all MySQL dependent modules ],
+mysql_support="no",mysql_support="yes")
+
+if test "x$mysql_support" = "xno"
+then
+    mysql_support=$withval
+fi
+
+# find libs
+AC_ARG_WITH(mysql-libs,
+[  --with-mysql-libs=DIR	Look for mysql client libraries in DIR],
+mysql_libs=$withval,mysql_libs="")
+
+if test "x$mysql_support" = "xyes"
+then
+AC_MSG_CHECKING([for the mysql client libraries])
+
+# two common alternate mysql_lib locations
+alt_lib1="/usr/local/lib/mysql"
+alt_lib2="/usr/lib/mysql"
+
+mysql_ok=no
+
+AC_MSG_RESULT([$mysql_libs])
+
+if test -n "$mysql_libs"
+then
+  LIBS="-L$mysql_libs $LIBS"
+  AC_CHECK_LIB(mysqlclient,mysql_real_query,mysql_ok=yes,mysql_ok=no)
+  if test "x$mysql_ok" != "xyes"
+  then
+    AC_MSG_ERROR([Could not find libmysqlclient in '$mysql_libs'. Try another location.])
+  fi
+fi
+
+SAVE_LIBS=$LIBS
+
+# check default
+if test "x$mysql_ok" != "xyes"
+then
+    AC_CHECK_LIB(mysqlclient,mysql_info,mysql_ok=yes,mysql_ok=no)
+fi
+
+if test "x$mysql_ok" != "xyes"
+then
+    LIBS="-L$alt_lib1 $SAVE_LIBS"
+    AC_CHECK_LIB(mysqlclient,mysql_init,mysql_ok=yes,mysql_ok=no)
+fi
+
+if test "x$mysql_ok" != "xyes"
+then
+    LIBS="-L$alt_lib2 $SAVE_LIBS"
+    AC_CHECK_LIB(mysqlclient,mysql_change_user,mysql_ok=yes,mysql_ok=no)
+fi
+
+if test "x$mysql_ok" != "xyes"
+then
+    AC_MSG_ERROR([Could not find libmysqlclient in '$alt_lib1' or '$alt_lib2'. Please specify location])
+fi
+
+fi
+
+# mysql headers
+
+AC_ARG_WITH(mysql-includes,
+[  --with-mysql-includes=DIR	Look for mysql include files in DIR],
+mysql_includes=$withval,mysql_includes="")
+
+if test "x$mysql_support" = "xyes"
+then
+AC_MSG_CHECKING([for mysql include files])
+
+# two common alternate mysql_include locations
+alt_inc1="/usr/local/include/mysql"
+alt_inc2="/usr/include/mysql"
+
+if test ! -f "$mysql_includes/my_config.h"
+then
+  if test ! -f "$alt_inc1/my_config.h"
+  then
+    if test ! -f "$alt_inc2/my_config.h"
+    then
+	AC_MSG_RESULT(no)
+	AC_MSG_ERROR([Could not find the mysql include file my_config.h in '$alt_inc1' or '$alt_inc2'])
+    else
+	AC_MSG_RESULT($alt_inc2)
+	MYSQL_INCLUDES="-I$alt_inc2"
+	AC_SUBST(MYSQL_INCLUDES)
+    fi
+  else
+      AC_MSG_RESULT($alt_inc1)
+      MYSQL_INCLUDES="-I$alt_inc1"
+      AC_SUBST(MYSQL_INCLUDES)
+  fi
+else
+    AC_MSG_RESULT($mysql_includes)
+    MYSQL_INCLUDES="-I$mysql_includes"
+    AC_SUBST(MYSQL_INCLUDES)
+fi
+
+fi
+
+AM_CONDITIONAL(MYSQL, test "x$mysql_support" = "xyes")
+
+##############################################################################
+# OpenSSL
+
+AC_ARG_WITH(ssl,
+[  --without-ssl	Disables all OpenSSL dependent modules ],
+ssl_support="no",ssl_support="yes")
+
+if test "x$ssl_support" = "xno"
+then
+    ssl_support=$withval
+fi
+
+AC_ARG_WITH(ssl-libs,
+[  --with-ssl-libs=DIR	Look for ssl libraries in DIR],
+ssl_libs=$withval,ssl_libs="")
+
+if test "x$ssl_support" = "xyes"
+then
+AC_MSG_CHECKING([for the ssl libraries])
+
+alt_lib1="/usr/local/ssl/lib"
+alt_lib2="/usr/ssl/lib"
+
+ssl_ok=no
+
+AC_MSG_RESULT([$ssl_libs])
+
+if test -n "$ssl_libs"
+then
+  LIBS="-L$ssl_libs $LIBS"
+  AC_CHECK_LIB(ssl,ssl2_accept,ssl_ok=yes,ssl_ok=no)
+  if test "x$ssl_ok" != "xyes"
+  then
+    AC_MSG_ERROR([Could not find libssl in '$ssl_libs'. Try another location.])
+  fi
+fi
+
+SAVE_LIBS=$LIBS
+
+# check default
+if test "x$ssl_ok" != "xyes"
+then
+    AC_CHECK_LIB(ssl,ssl2_accept,ssl_ok=yes,ssl_ok=no)
+fi
+
+if test "x$ssl_ok" != "xyes"
+then
+  LIBS="-L$alt_lib1 $SAVE_LIBS"
+  AC_CHECK_LIB(ssl,ssl2_enc,ssl_ok=yes,ssl_ok=no)
+fi
+
+if test "x$ssl_ok" != "xyes"
+then
+    LIBS="-L$alt_lib2 $SAVE_LIBS"
+    AC_CHECK_LIB(ssl,ssl2_enc_init,ssl_ok=yes,ssl_ok=no)
+fi
+
+if test "x$ssl_ok" != "xyes"
+then
+    AC_MSG_ERROR([Could not find libssl in '$alt_lib1' or '$alt_lib2'. Please specify location])
+fi
+
+# ssl headers
+
+AC_ARG_WITH(ssl-includes,
+[  --with-ssl-includes=DIR	Look for ssl include files in DIR],
+ssl_includes=$withval,ssl_includes="")
+
+AC_MSG_CHECKING([for ssl include files in $ssl_includes])
+
+# common alternate ssl_include locations
+alt_inc1="/usr/local/ssl/include"
+alt_inc2="/usr/include/ssl"
+alt_inc3="/usr/include"
+
+if test ! -f "$ssl_includes/openssl/ssl.h"
+then
+  if test ! -f "$alt_inc1/openssl/ssl.h"
+  then
+    if test ! -f "$alt_inc2/openssl/ssl.h"
+    then
+	if test ! -f "$alt_inc3/openssl/ssl.h"
+	then
+	    AC_MSG_RESULT(no)
+	    AC_MSG_ERROR([Could not find the ssl include file openssl/ssl.h in '$alt_inc1', '$alt_inc2' or '$alt_inc3'])
+	else
+	    AC_MSG_RESULT($alt_inc3)
+	    SSL_INCLUDES="-I$alt_inc3"
+	    AC_SUBST(SSL_INCLUDES)
+	fi
+    else
+	AC_MSG_RESULT($alt_inc2)
+	SSL_INCLUDES="-I$alt_inc2"
+	AC_SUBST(SSL_INCLUDES)
+    fi
+  else
+      AC_MSG_RESULT($alt_inc1)
+      SSL_INCLUDES="-I$alt_inc1"
+      AC_SUBST(SSL_INCLUDES)
+  fi
+else
+    AC_MSG_RESULT($ssl_includes)
+    SSL_INCLUDES="-I$ssl_includes"
+    AC_SUBST(SSL_INCLUDES)
+fi
+
+fi
+
+AM_CONDITIONAL(SSL, test "x$ssl_support" = "xyes")
+
+##############################################################################
+# LibXML2
+
+AC_ARG_WITH(libxml,
+[  --with-libxml	libXML2 installation prefix ],
+xml_prefix=$withval,xml_prefix="/usr")
+
+AC_MSG_CHECKING([for the libXML2 library])
+
+alt_lib1="/usr/local/lib"
+
+libxml_ok=no
+xml_libs="$xml_prefix/lib"
+xml_includes="$xml_prefix/include/libxml2"
+
+AC_MSG_RESULT([$xml_libs])
+
+if test -n "$xml_libs"
+then
+  LIBS="-L$xml_libs $LIBS"
+  AC_CHECK_LIB(xml2,xmlParseFile,libxml_ok=yes,libxml_ok=no)
+  if test "x$libxml_ok" != "xyes"
+  then
+    AC_MSG_ERROR([Could not find libxml2 in '$xml_libs'. Try another location.])
+  fi
+fi
+
+SAVE_LIBS=$LIBS
+
+# check alternate
+if test "x$libxml_ok" != "xyes"
+then
+  LIBS="-L$alt_lib1 $SAVE_LIBS"
+  AC_CHECK_LIB(xml2,xmlDocGetRootElement,libxml_ok=yes,libxml_ok=no)
+fi
+
+if test "x$libxml_ok" != "xyes"
+then
+    AC_MSG_ERROR([Could not find libxml in '$alt_lib1' or '$xml_libs'. Please specify location])
+fi
+
+# headers
+AC_MSG_CHECKING([for libXML2 include files])
+
+# common alternate ssl_include locations
+alt_inc1="/usr/local/include/libxml2"
+
+if test ! -f "$xml_includes/libxml/parser.h"
+then
+  if test ! -f "$alt_inc1/libxml/parser.h"
+  then
+    AC_MSG_RESULT(no)
+    AC_MSG_ERROR([Could not find the libxml include file libxml/parser.h in '$alt_inc1', '$xml_includes'])
+  else
+    AC_MSG_RESULT($alt_inc1)
+    LIBXML_INCLUDES="-I$alt_inc1"
+    AC_SUBST(LIBXML_INCLUDES)
+  fi
+else
+    AC_MSG_RESULT($xml_includes)
+    LIBXML_INCLUDES="-I$xml_includes"
+    AC_SUBST(LIBXML_INCLUDES)
+fi
+
+##############################################################################
+# OpenLDAP
+
+AC_ARG_WITH(ldap,
+[  --without-ldap	Disables all OpenLDAP dependent modules ],
+ldap_support="no",ldap_support="yes")
+
+if test "x$ldap_support" = "xno"
+then
+    ldap_support=$withval
+fi
+
+AM_CONDITIONAL(LDAP, test "x$ldap_support" = "xyes")
+
+
+##############################################################################
+# Checks for header files.
+##############################################################################
+
+AC_HEADER_DIRENT
+AC_HEADER_STDC
+AC_HEADER_SYS_WAIT
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h malloc.h netdb.h netinet/in.h stdlib.h string.h sys/file.h sys/ioctl.h sys/socket.h sys/time.h syslog.h unistd.h utime.h])
+
+##############################################################################
+# Checks for typedefs, structures, and compiler characteristics.
+##############################################################################
+
+# Checks for library functions.
+AC_FUNC_ERROR_AT_LINE
+AC_FUNC_FORK
+AC_PROG_GCC_TRADITIONAL
+AC_FUNC_MALLOC
+AC_FUNC_REALLOC
+AC_FUNC_SELECT_ARGTYPES
+AC_FUNC_SETVBUF_REVERSED
+AC_FUNC_STAT
+AC_FUNC_STRFTIME
+AC_FUNC_VPRINTF
+AC_FUNC_CLOSEDIR_VOID
+AC_CHECK_FUNCS([gettimeofday memset realpath select socket strchr strdup strerror strndup strrchr tzset])
+
+##############################################################################
+dnl Check for IPv6 support
+
+AC_MSG_CHECKING([for IPv6 support])
+
+AC_RUN_IFELSE(
+    AC_LANG_SOURCE([
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
+struct sockaddr_in6 s6;
+
+int main() {
+    if(socket(PF_INET6, SOCK_DGRAM, 0) == -1){
+	return 1;
+    }
+    return 0;
+}]),
+    AC_MSG_RESULT(yes)
+    AC_DEFINE([OUTPOST_IPV6], [1], [is IPv6 support enabled]),
+    AC_MSG_RESULT(no),
+    AC_MSG_RESULT(cross_compiling)
+)
+
+
+##############################################################################
+
+AC_LANG_PUSH(C++)
+AC_CHECK_HEADERS([hash_map ext/hash_map])
+AC_LANG_POP(C++)
+
+##############################################################################
+
+# Compiler features options
+CXXFLAGS="${CXXFLAGS} ${PTH_CFLAGS} -fno-exceptions -fno-rtti"
+# Optimization options
+CXXFLAGS="${CXXFLAGS} -O2 -fomit-frame-pointer -fexpensive-optimizations"
+# Compiling options
+CXXFLAGS="${CXXFLAGS} -pipe"
+# Warning options 
+CXXFLAGS="${CXXFLAGS} -Werror -Wall -Winline"
+# 
+CXXFLAGS="${CXXFLAGS} -D_REENTRANT -D_THREAD_SAFE"
+
+# All is same for C
+CFLAGS=$CXXFLAGS
+
+##############################################################################
+
+AC_CONFIG_FILES([Makefile
+		 src/Makefile
+		 src/inserver/Makefile
+		 src/logd/Makefile
+		 libs/Makefile
+		 libs/dotconf++/Makefile
+		 libs/crypt/Makefile])
+AC_OUTPUT

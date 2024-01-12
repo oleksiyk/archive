@@ -1,3 +1,0 @@
-Wed Mar 10 15:41:48 2004
-- BUGFIX. during initial USB scan only barcode readers will be detected, not
-    any other atttached input-type USB device
